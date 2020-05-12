@@ -18,11 +18,11 @@ jobs:
     - name: Set up Python version
       uses: actions/setup-python@v1
       with:
-        python-version: '3.8.2'
+        python-version: '3.6'
 
     - name: Install Python dependencies
       run: |
-        python -m venv env
+        python3 -m venv env
         source env/bin/activate
         pip install -r requirements.txt
     - name: Zip the application files
@@ -33,5 +33,5 @@ jobs:
       with:
         app-name: 'dataingestionaccelerator'
         slot-name: 'production'
-        publish-profile: ${{ secrets.AzureAppService_PublishProfile_437b68210b1648cfac1590ea3734d9cd }}
+        publish-profile: ${{ secrets.AzureAppService_PublishProfile_3e27b64207104b6cb7fd50004ae15c90 }}
         package: './myapp.zip'
