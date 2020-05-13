@@ -32,4 +32,4 @@ jobs:
         app-name: 'dataingestionaccelerator'
         slot-name: 'production'
         publish-profile: ${{ secrets.AzureAppService_PublishProfile_921291bdba854d32b41e0462a21e71da }}
-        package: 'master'
+        package: 'deaccelerator'
