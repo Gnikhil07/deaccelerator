@@ -27,7 +27,9 @@ jobs:
         pip install -r requirements.txt
     - name: Zip the application files
       shell: bash
-      run: zip -r myapp.zip .
+      run: |
+        sudo apt-get install zip
+        zip -r myapp.zip .
 
     - name: 'Deploy to Azure Web App'
       uses: azure/webapps-deploy@v1
