@@ -22,8 +22,8 @@ jobs:
 
     - name: Install Python dependencies
       run: |
-        python3 -m venv env
-        env/bin/activate
+        python -m venv env
+        env/scripts/activate
         pip install -r requirements.txt
     - name: Zip the application files
       run: zip -r myapp.zip .
