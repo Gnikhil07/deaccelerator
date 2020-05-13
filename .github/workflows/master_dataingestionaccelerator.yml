@@ -10,7 +10,7 @@ on:
 
 jobs:
   build-and-deploy:
-    runs-on: linux
+    runs-on: Ubuntu
 
     steps:
     - uses: actions/checkout@master
