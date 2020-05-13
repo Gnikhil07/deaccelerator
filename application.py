@@ -9,9 +9,9 @@ from datetime import datetime
 import pandas as pd
 import numpy as np
 import pymysql
+import json 
 import mysql
 
-import requests,json
 
 
 app = Flask(__name__)
@@ -81,7 +81,7 @@ def overview():
     # User is not loggedin redirect to login page
     return redirect(url_for('login'))
 
-@app.route('/overview', methods=['GET', 'POST'])
+@app.route('/pythonlogin/overview', methods=['GET', 'POST'])
 def overviewform():
     if request.method == "POST":
         details = request.form
@@ -102,10 +102,18 @@ def overviewform():
         Target_Directoryid = details['Target_Directoryid']
         Target_Adlaccount = details['Target_Adlaccount']
         source_query = details['source query']
-        operation_type = details['operation type']
         mydb = mysql.connector.connect(host="demetadata.mysql.database.azure.com",user="DEadmin@demetadata",passwd="Tredence@123",database = "deaccelator")
         cursor = mydb.cursor()
-        cursor.execute("INSERT INTO datacatlogentry (UserName, DataCategory,Owner,FileName,SourceType,TargetType,Operation,Source_Query) VALUES (%s,%s, %s,%s,%s, %s,%s,%s) ;",(UserName, DataCategory,Owner,FileName,SourceType,TargetType,operation_type,source_query))
+        cursor.execute(" SELECT * FROM datacatlogentry   WHERE  UserName=%s AND `FileName`=%s AND TargetType=%s   LIMIT 1 ;",(UserName,FileName,TargetType))
+        account1 = cursor.fetchone()
+        if account1:
+            session['file exists'] = 'YES'
+            session['existing file Entry ID']=account1[0]
+            print(session['existing file Entry ID'])
+        else:
+            session['file exists'] = 'NO'
+        print(session['file exists'])
+        cursor.execute("INSERT INTO datacatlogentry (UserName, DataCategory,Owner,FileName,SourceType,TargetType,Source_Query) VALUES (%s,%s, %s,%s,%s,%s,%s) ;",(UserName, DataCategory,Owner,FileName,SourceType,TargetType,source_query))
         mydb.commit()
         cursor.close()
         mydb = mysql.connector.connect(host="demetadata.mysql.database.azure.com",user="DEadmin@demetadata",passwd="Tredence@123",database = "deaccelator")
@@ -117,11 +125,10 @@ def overviewform():
         cursor.execute(" INSERT INTO parameter (EntryId, Source_Type, Source_HostName, Source_UserName, Source_Password, Source_Database, Target_Type, Target_Applicationid, target_ApplicationCredential, Target_Directoryid, Target_Adlaccount) VALUES(%s,%s, %s,%s,%s, %s,%s, %s,%s,%s, %s) ;",(session['EntryID'],SourceType,session['hostname'],session['user'],session['password'],session['database name' ],TargetType,Target_Applicationid,target_ApplicationCredential,Target_Directoryid,Target_Adlaccount))
         mydb.commit()
         cursor.close()
-
         return redirect(url_for('index'))
     return render_template('overview.html')
 
-@app.route('/metadata') # is not useful for now
+@app.route('/pythonlogin/metadata') # is not useful for now
 def metadata():
     # Check if user is loggedin
     if 'loggedin' in session:
@@ -147,7 +154,7 @@ def metadata():
 
 
 
-@app.route('/metadata2', methods=['GET', 'POST'])
+@app.route('/metadata', methods=['GET', 'POST'])
 def index():
     mydb = mysql.connector.connect(host=session['hostname'],user=session['user'],passwd=session['password'],database = session['database name'])
     cursor = mydb.cursor()
@@ -157,40 +164,18 @@ def index():
     data = cursor.fetchall() 
     df = pd.DataFrame(data, columns='ColumnName DataType Nullable PrimaryKey Default Description'.split())
     df = df.assign(ColumnNumber=[i+1 for i in range(len(df))])[['ColumnNumber'] + df.columns.tolist()]
-    df1 = df.assign(EntryID=session['EntryID'])[['EntryID'] + df.columns.tolist()]
     cursor.execute(" DROP VIEW temp ")
     mydb.commit()
     cursor.close()
-    return render_template("metadataV3.html", column_names=df1.columns.values, row_data=list(df1.values.tolist()), zip=zip)
+    value = session['file exists']
+    return render_template("metadataV3.html", column_names=df.columns.values, row_data=list(df.values.tolist()), zip=zip, value=value)
 
 
-# def listoftuples(a):
-#     i=0
-#     j=8
-#     listlen = len(a)
-#     reslist=[]
-#     while ((i+8<=listlen) and (j<=listlen)):
-#         splitlist = a[i:j]
-#         reslist.append(tuple(splitlist))
-#         i = i+8
-#         j = j+8
-#     return reslist
-
-
-@app.route('/metadata3', methods=['GET', 'POST'])
+@app.route('/ingest', methods=['GET', 'POST'])
 def index1():
     if request.method == "POST":
-        # a= list(request.form.getlist('imp'))
-        # c = listoftuples(a)
-        # cur = mysql.connection.cursor()
-        # for item in c:
-        #     cur.execute("INSERT INTO metadata VALUES(%s, %s, %s, %s, %s, %s, %s, %s ) ", item )
-        # cur.execute(" SELECT * FROM metadata ")
-        # mysql.connection.commit()
-        # cur.close()
-        # change id and name in table in metadatav3 to {{col}} to use the below method
         newform = request.form.getlist
-        EntryID = newform('EntryID')
+        # EntryID = newform('EntryID')
         ColumnNumber = newform('ColumnNumber')
         ColumnName = newform('ColumnName')	
         DataType = newform('DataType')
@@ -200,24 +185,82 @@ def index1():
         Column_description = newform('Description')
         mydb = mysql.connector.connect(host="demetadata.mysql.database.azure.com",user="DEadmin@demetadata",passwd="Tredence@123",database = "deaccelator")
         cursor = mydb.cursor()
-        df4 = pd.DataFrame(list(zip(EntryID, ColumnNumber,ColumnName,DataType,Nullable,PrimaryKey,Default,Column_description)), columns =['EntryID', 'ColumnNumber','ColumnName','DataType','Nullable','PrimaryKey','Default','Description'])
-        cols = "`,`".join([str(i) for i in df4.columns.tolist()])
-        for i,row in df4.iterrows():
+        df4 = pd.DataFrame(list(zip(ColumnNumber,ColumnName,DataType,Nullable,PrimaryKey,Default,Column_description)), columns =['ColumnNumber','ColumnName','DataType','Nullable','PrimaryKey','Default','Description'])
+        df1 = df4.assign(EntryID=session['EntryID'])[['EntryID'] + df4.columns.tolist()]
+        cols = "`,`".join([str(i) for i in df1.columns.tolist()])
+        for i,row in df1.iterrows():
             sql = "INSERT INTO `metadata` (`" +cols + "`) VALUES (" + "%s,"*(len(row)-1) + "%s)"
             cursor.execute(sql, tuple(row))
+        print(df1)
+        df5 = df1['DataType']
+        print(df5)
         mydb.commit()
         cursor.close()
-        return redirect(url_for('index2'))
+        if session['file exists']=='YES' :
+            mydb1 = mysql.connector.connect(host="demetadata.mysql.database.azure.com",user="DEadmin@demetadata",passwd="Tredence@123",database = "deaccelator")
+            cursor1 = mydb1.cursor()
+            cursor1.execute(' SELECT DataType FROM metadata Where EntryID = %s ;'%(session['existing file Entry ID']))
+            data1 = cursor1.fetchall()
+            df6 = pd.DataFrame(data1, columns='DataType'.split())
+            df7 = df6['DataType']
+            print(df7)
+            print(df5.equals(df7))
+            mydb.commit()
+            cursor.close()
+            if df5.equals(df7) :
+                value = session['file exists']
+                return render_template("metadataV4.html", column_names=df4.columns.values, row_data=list(df4.values.tolist()), zip=zip, value=value)
+            else :
+                value = 'YES, But Metadata is not matching'
+                return render_template("metadataV4.html", column_names=df4.columns.values, row_data=list(df4.values.tolist()), zip=zip, value=value)
+            
+        else:
+            value = session['file exists']
+            return render_template("metadataV4.html", column_names=df4.columns.values, row_data=list(df4.values.tolist()), zip=zip, value=value)
     return render_template("metadataV3.html")
 
+# @app.route('/pythonlogin/metadata5', methods=['GET', 'POST'])
+# def popup_test():
+#     if (session['file exists'] == 'YES') :
+#         print('file exists') # wrte code to invoke script
+#     else:
+#         return redirect(url_for('index2')) 
 
 
-@app.route('/metadata4', methods=['GET', 'POST'])
+import requests,json
+
+@app.route('/pythonlogin/metadata4', methods=['GET', 'POST'])
 def index2():
-   headers = {'Authorization': 'Bearer dapi042eca35a8dd2f707b2562849e33f013'}
-   data = '{ "job_id" : 3 , "notebook_params": { "entryid": ' +str(session['EntryID'])+ ' } }'
-   response = requests.post('https://adb-6971132450799346.6.azuredatabricks.net/api/2.0/jobs/run-now', headers=headers, data=data)
-   return redirect(url_for('home')) 
+    headers = {'Authorization': 'Bearer dapi042eca35a8dd2f707b2562849e33f013'}
+    data = '{ "job_id" : 3 , "notebook_params": { "entryid": ' +str(session['EntryID'])+ ' } }'
+    response = requests.post('https://adb-6971132450799346.6.azuredatabricks.net/api/2.0/jobs/run-now', headers=headers, data=data)
+    return redirect(url_for('home')) 
+
+@app.route('/pythonlogin/metadata5', methods=['GET', 'POST'])
+def append():
+    mydb = mysql.connector.connect(host="demetadata.mysql.database.azure.com",user="DEadmin@demetadata",passwd="Tredence@123",database = "deaccelator")
+    cursor = mydb.cursor()
+    cursor.execute(" UPDATE datacatlogentry Set Operation = %s Where entryid = %s ;",('Upsert',int(session['EntryID'])))
+    mydb.commit()
+    cursor.close()
+    headers = {'Authorization': 'Bearer dapi042eca35a8dd2f707b2562849e33f013'}
+    data = '{ "job_id" : 3 , "notebook_params": { "entryid": ' +str(session['EntryID'])+ ' } }'
+    response = requests.post('https://adb-6971132450799346.6.azuredatabricks.net/api/2.0/jobs/run-now', headers=headers, data=data)
+    return redirect(url_for('home')) 
+
+@app.route('/pythonlogin/metadata6', methods=['GET', 'POST'])
+def replace():
+    mydb = mysql.connector.connect(host="demetadata.mysql.database.azure.com",user="DEadmin@demetadata",passwd="Tredence@123",database = "deaccelator")
+    cursor = mydb.cursor()
+    cursor.execute(' UPDATE datacatlogentry Set Operation = %s Where EntryID = %s ; ',('Overwrite',int(session['EntryID'])))
+    mydb.commit()
+    cursor.close()
+    headers = {'Authorization': 'Bearer dapi042eca35a8dd2f707b2562849e33f013'}
+    data = '{ "job_id" : 3 , "notebook_params": { "entryid": ' +str(session['EntryID'])+ ' } }'
+    response = requests.post('https://adb-6971132450799346.6.azuredatabricks.net/api/2.0/jobs/run-now', headers=headers, data=data)
+    return redirect(url_for('home')) 
+
+
 
 
 if __name__=="__main__":
