@@ -29,6 +29,13 @@ jobs:
       run: |
         python -m pip install --upgrade pip
         pip install -r requirements.txt
+    - name: Azure Login
+      uses: Azure/login@v1.1
+      with: 
+        Subscription ID: bfa1da60-a59e-4b3c-8f8b-7265e5d1a166
+    # Set this value to true to enable Azure PowerShell Login in addition to Az CLI login
+
+
     - name: Deploy Web App using GH Action azure/webapps-deploy
       uses: azure/webapps-deploy@v2
       with:
