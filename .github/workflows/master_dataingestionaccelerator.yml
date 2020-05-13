@@ -26,7 +26,11 @@ jobs:
         env/scripts/activate
         pip install -r requirements.txt
     - name: Zip the application files
+      uses: montudor/action-zip@v0.1.0
       run: zip -r myapp.zip myapp.zip
+      
+  #with:
+   # args: zip -qq -r ./dir.zip ./dir
 
     - name: 'Deploy to Azure Web App'
       uses: azure/webapps-deploy@v1
