@@ -3,13 +3,13 @@ import pandas as pd
 import numpy as np
 import json 
 import mysql
-import requests
-from itertools import islice
-from contextlib import closing
-import csv
-import codecs
-from itertools import islice
-from dateutil.parser import parse
+#import requests
+#from itertools import islice
+#from contextlib import closing
+#import csv
+#import codecs
+#from itertools import islice
+#from dateutil.parser import parse
 
 
 
