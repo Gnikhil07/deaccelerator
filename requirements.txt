@@ -10,8 +10,3 @@ pandas==1.0.3
 pylint==2.4.4
 requests==2.23.0
 Werkzeug==1.0.1
-requests==2.22.0
-more-itertools==8.2.0
-pycparser==2.20
-pyparsing==2.4.7
-urllib3==1.25.9
