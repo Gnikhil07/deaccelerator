@@ -1,14 +1,6 @@
 from flask import Flask, render_template, request, redirect, url_for, session
-import pymysql
-pymysql.install_as_MySQLdb()
-import MySQLdb
-from flask_mysqldb import MySQL
-import MySQLdb.cursors
-import re
-from datetime import datetime
 import pandas as pd
 import numpy as np
-import pymysql
 import json 
 import mysql
 import requests
