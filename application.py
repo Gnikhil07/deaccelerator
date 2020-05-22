@@ -3,13 +3,13 @@ import pandas as pd
 import numpy as np
 import json 
 import mysql
-#import requests
-#from itertools import islice
-#from contextlib import closing
-#import csv
-#import codecs
-#from itertools import islice
-#from dateutil.parser import parse
+import requests
+from itertools import islice
+from contextlib import closing
+import csv
+import codecs
+from itertools import islice
+from dateutil.parser import parse
 
 
 
@@ -106,7 +106,6 @@ def overviewform():
         session['delimiter']=details['Type of Delimiter']
         if session['source location type']=='Google Drive':
             session['file_id'] = google_drive_link.split('/')[-2]
-            print(session['file_id'])
         mydb = mysql.connector.connect(host="demetadata.mysql.database.azure.com",user="DEadmin@demetadata",passwd="Tredence@123",database = "deaccelator")
         cursor = mydb.cursor()
         cursor.execute(" SELECT * FROM datacatlogentry   WHERE  UserName=%s AND `FileName`=%s AND TargetType=%s   LIMIT 1 ;",(UserName,FileName,TargetType))
@@ -114,7 +113,6 @@ def overviewform():
         if account1:
             session['file exists'] = 'YES'
             session['existing file Entry ID']=account1[0]
-            print(session['existing file Entry ID'])
         else:
             session['file exists'] = 'NO'
         cursor.execute("INSERT INTO datacatlogentry (UserName, DataCategory,Owner,FileName,SourceType,TargetType,Source_Query) VALUES (%s,%s, %s,%s,%s,%s,%s) ;",(UserName, DataCategory,Owner,FileName,session['source location type'],TargetType,source_query))
@@ -172,11 +170,12 @@ def index():
         data = cursor.fetchall() 
         df = pd.DataFrame(data, columns='ColumnName DataType Nullable PrimaryKey Default Description'.split())
         df = df.assign(ColumnNumber=[i+1 for i in range(len(df))])[['ColumnNumber'] + df.columns.tolist()]
+        df1=  df.drop(['PrimaryKey'], axis = 1)
         cursor.execute(" DROP VIEW temp ")
         mydb.commit()
         cursor.close()
         value = session['file exists']
-        return render_template("metadataV3.html", column_names=df.columns.values, row_data=list(df.values.tolist()), zip=zip, value=value)
+        return render_template("metadataV3.html", column_names=df1.columns.values, row_data=list(df1.values.tolist()), zip=zip, value=value)
     elif SourceType == 'Google Drive':
         URL = 'https://docs.google.com/uc?export=download'
         def get_confirm_token(response):
@@ -210,17 +209,19 @@ def index():
         df3['DataType']=df4['data_type']
         df3 = df3.assign(ColumnNumber=[i+1 for i in range(len(df3))])[['ColumnNumber'] + df3.columns.tolist()]
         df3['Nullable']=''
-        df3['PrimaryKey']=''
         df3['Default']=''
         df3['Description']=''
         value = session['file exists']
         return render_template("metadataV3.html", column_names=df3.columns.values, row_data=list(df3.values.tolist()), zip=zip, value=value)
 
-
-
-
-
-    
+@app.route('/Rollbackmetadata', methods=['GET', 'POST'])
+def Rollbackmetadata():
+    mydb = mysql.connector.connect(host="demetadata.mysql.database.azure.com",user="DEadmin@demetadata",passwd="Tredence@123",database = "deaccelator")
+    cursor = mydb.cursor()
+    cursor.execute("DELETE FROM metadata WHERE EntryID = %s ;"%(session['EntryID']))
+    mydb.commit()
+    cursor.close()
+    return redirect(url_for('index'))    
 
 
 @app.route('/ingest', methods=['GET', 'POST'])

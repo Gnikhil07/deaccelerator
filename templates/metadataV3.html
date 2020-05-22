@@ -176,8 +176,20 @@ td, th {
   border: 1px solid #dddddd;
   text-align: left;
   padding: 8px;
+  
 }
 
+#PrimaryKey{
+         font: 0.8em sans-serif;
+         
+         /* Uniform text field size */
+         width: 50px;
+         background-color:rgb(236, 222, 202) ;
+         
+         /* Match form field borders */
+         border: 1px solid #999;
+
+}
 tr:nth-child(even) {
   background-color: #dddddd;
 
@@ -200,7 +212,7 @@ tr:nth-child(even) {
   border-radius: 5px;
   box-shadow:  6px 6px 29px -4px rgba(0,0,0,0.75);
   margin-top: 25px;
-  margin-left: 370px;
+  margin-left: 320px;
   text-decoration: none;
   transition: 0.4s; 
 }
@@ -271,6 +283,7 @@ tr:nth-child(even) {
                 <th>{{col}}</th>
                 
                 {% endfor %}
+                <th>PrimaryKey</th>
                 <!--th>Column_description</th-->
             </tr>
             {% for row in row_data %}
@@ -281,13 +294,18 @@ tr:nth-child(even) {
                 <td><input type="text" id="{{col}}" name="{{col}}" value={{row_}}></td>
                 {% endif %}
                 {% endfor %}
-            </tr>
+                <td><select class="form-control" name = "PrimaryKey" id = "PrimaryKey">
+                  <option>Yes</option>
+                  <option selected>No</option>
+                </select></td>
+              </tr>
+            
             {% endfor %}
         
         </table>
         <p>File Already Exists : {{value}} </p>
         <!-- <input type="text" id="nn" value="{{value}}">File Already exists:</input> -->
-        <input type="submit" class="button1" value="Submit the Metadata" id="btnSubmit" style=" margin-top: 1rem; width: auto; text-align: right;"> 
+        <input type="submit" class="button1" value="Validate the Metadata" id="btnSubmit" style=" margin-top: 1rem; width: auto; text-align: right;"> 
         </form>
         <!-- <input  class="button" id="button" href="#" type= "submit" value="Ingest Data"></input>          -->
        <div class="popup">
