@@ -286,11 +286,12 @@ tr:nth-child(even) {
         <p>File Already Exists : {{value}} </p>
         <!-- <input  class="button" href="{{ url_for('index1') }}" type= "submit" value="Ingest Data"></input>          -->
         </form>
-        <input  class="button1" id="button" href="#" type= "submit" value="Ingest Data"></input>         
+        <input  class="button1" id="button" href="#" type= "submit" value="Ingest Data"></input>
+        <a href="{{ url_for('Rollbackmetadata') }}" class="button1"><input class="button" type="submit" value="Cancel"></input></a>
        <div class="popup">
         <div class="popup-content">
           <img src="{{ url_for('static', filename='close.jpg') }}" alt="close" class="close">
-          <p>The File Already exists in DataBase. Do you want to replace it or Append it ?</p>
+          <p>The File Already exists in DataBase. Do you want to Upsert  or Overwrite it ?</p>
           <br><br>
           <a href="{{ url_for('append') }}" class="button"><input id="append" class="button" type="submit" value="Upsert"></input></a>
           <a href="{{ url_for('replace') }}" class="button"><input class="button" type="submit" value="Overwrite"></input></a>
