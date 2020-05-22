@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+ <meta charset="UTF-8">
+ <meta name="viewport" content="width=device-width, initial-scale=1.0">
+ <meta http-equiv="X-UA-Compatible" content="ie=edge">
+ <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+ <title>Document</title>
+ 
+</head>
+<body>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+<style>
+        body {
+          font-family: "Lato", sans-serif;
+        }
+        
+        .sidebar {
+          height: 100%;
+          width: 0;
+          position: fixed;
+          z-index: 1;
+          top: 0;
+          left: 0;
+          background-color: #111;
+          overflow-x: hidden;
+          transition: 0.5s;
+          padding-top: 60px;
+        }
+        
+        .sidebar a {
+          padding: 8px 8px 8px 32px;
+          text-decoration: none;
+          font-size: 25px;
+          color: #818181;
+          display: block;
+          transition: 0.3s;
+        }
+        
+        .sidebar a:hover {
+          color: #f1f1f1;
+        }
+        
+        .sidebar .closebtn {
+          position: absolute;
+          top: 0;
+          right: 25px;
+          font-size: 36px;
+          margin-left: 50px;
+        }
+        
+        .openbtn {
+          font-size: 20px;
+          cursor: pointer;
+          background-color: #111;
+          color: white;
+          padding: 10px 15px;
+          border: none;
+        }
+        
+        .openbtn:hover {
+          background-color: #444;
+        }
+        
+        #main {
+          transition: margin-left .5s;
+          padding: 16px;
+        }
+        
+        /* On smaller screens, where height is less than 450px, change the style of the sidenav (less padding and a smaller font size) */
+        @media screen and (max-height: 450px) {
+          .sidebar {padding-top: 15px;}
+          .sidebar a {font-size: 18px;}
+        }
+        </style>
+
+<div id="mySidebar" class="sidebar">
+  <a href="javascript:void(0)" class="closebtn" onclick="closeNav()">×</a>
+  <a href="{{ url_for('home') }}"><i class="fas fa-home"></i>Home</a>
+              <a href="{{ url_for('overview') }}"><i class="fas fa-home"></i>Overview</a>
+      <a href="{{ url_for('logout') }}"><i class="fas fa-sign-out-alt"></i>Logout</a>
+</div>
+
+
+<div id="main">
+  <button class="openbtn" style="margin: 0em;";" onclick="openNav()">☰ <img src="{{ url_for('static', filename='tredence.png') }}" alt="Smiley face" height="30" width=90></button>    
+</div>
+
+
+<script>
+function openNav() {
+  document.getElementById("mySidebar").style.width = "250px";
+  document.getElementById("main").style.marginLeft = "250px";
+}
+
+function closeNav() {
+  document.getElementById("mySidebar").style.width = "0";
+  document.getElementById("main").style.marginLeft= "0";
+}
+</script>
+
+    <style>
+        form {
+         /* Center the form on the page */
+         margin: auto;
+         width: fit-content;
+         /* Form outline */
+         padding: 2em;
+         border: 5px solid #CCC;
+         border-radius: 1em;
+        }
+         
+        ul {
+         list-style: none;
+         padding: 5;
+         margin: 5;
+        }
+         
+        form li + li {
+         margin-top: 1em;
+        }
+         
+        label {
+         /* Uniform size & alignment */
+         display: inline-block;
+         width: 150px;
+         text-align: right;
+        }
+         
+        input, 
+        textarea {
+         /* To make sure that all text fields have the same font settings
+         By default, textareas have a monospace font */
+         font: 0.8em sans-serif;
+         
+         /* Uniform text field size */
+         width: 100px;
+         background-color:rgb(236, 222, 202) ;
+         
+         /* Match form field borders */
+         border: 1px solid #999;
+        }
+         
+        input:focus, 
+        textarea:focus {
+         /* Additional highlight for focused elements */
+         border-color: #000;
+        }
+         
+        textarea {
+         /* Align multiline text fields with their labels */
+         vertical-align: top;
+         
+         /* Provide space to type some text */
+         height: 5em;
+        }
+         
+        button {
+         /* Align buttons with the text fields */
+         padding-left: 10px; /* same size as the label elements */
+        }
+         
+        button {
+         /* This extra margin represent roughly the same space as the space
+         between the labels and their text fields */
+         margin-left: 100em;
+         
+        }
+        table {
+  font-family: arial, sans-serif;
+  border-collapse: collapse;
+  width: 50%;
+}
+
+td, th {
+  border: 1px solid #dddddd;
+  text-align: left;
+  padding: 8px;
+  
+}
+
+#PrimaryKey{
+         font: 0.8em sans-serif;
+         
+         /* Uniform text field size */
+         width: 50px;
+         background-color:rgb(236, 222, 202) ;
+         
+         /* Match form field borders */
+         border: 1px solid #999;
+
+}
+tr:nth-child(even) {
+  background-color: #dddddd;
+
+}
+.container {
+  width: auto;
+  position: relative;
+  top: 50%;
+  left: 90%;
+  transform: translate(-50%,100%);
+  text-align: left;
+}
+.button1 {
+  background: #fff;
+  padding: 10px 0px;
+  position: relative;
+  color: #34495e;
+  font-weight: bolder;
+  font-size: 18px;
+  border-radius: 5px;
+  box-shadow:  6px 6px 29px -4px rgba(0,0,0,0.75);
+  margin-top: 25px;
+  margin-left: 320px;
+  text-decoration: none;
+  transition: 0.4s; 
+}
+
+.button {
+  background: #fff;
+  padding: 10px 0px;
+  position: relative;
+  color: #34495e;
+  font-weight: bolder;
+  font-size: 18px;
+  border-radius: 5px;
+  box-shadow:  6px 6px 29px -4px rgba(0,0,0,0.75);
+  margin-top: 25px;
+  margin-left: 370px;
+  text-decoration: none;
+  transition: 0.4s; 
+}
+.button:hover{
+  background: #34495e;
+  color: #fff;
+
+}
+.button1:hover{
+  background: #34495e;
+  color: #fff;
+
+}
+
+.popup{
+  background: rgba(0,0,0,0.6);
+  width: 100%;
+  height: 100%;
+  position: absolute;
+  top: 0;
+  display: none;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+}
+.popup-content {
+  height: 250px;
+  width: 500px;
+  background: #fff;
+  padding: 20px;
+  border-radius: 5px;
+  position: relative;
+}
+.close{
+  position: absolute;
+  top: -15px;
+  right: -15px;
+  background: #fff;
+  height: 20px;
+  width: 20px;
+  border-radius: 50%;
+  box-shadow: 6px 6px 29px -4px   rgba(0,0,0,0.75);
+  cursor: pointer;
+}
+         </style>
+         
+ 
+         <form action="{{ url_for('index1') }}" method="post" id = "form1">
+          <h1>Metadata</h1>      
+          <table name = "table1" id = "table1">
+            <tr>
+                {% for col in column_names %}
+                <th>{{col}}</th>
+                
+                {% endfor %}
+                <th>PrimaryKey</th>
+                <!--th>Column_description</th-->
+            </tr>
+            {% for row in row_data %}
+            <tr>
+                {% for col, row_ in zip(column_names, row) %}
+                {% if col == link_column %}
+                {% else %}
+                <td><input type="text" id="{{col}}" name="{{col}}" value={{row_}}></td>
+                {% endif %}
+                {% endfor %}
+                <td><select class="form-control" name = "PrimaryKey" id = "PrimaryKey">
+                  <option>Yes</option>
+                  <option selected>No</option>
+                </select></td>
+              </tr>
+            
+            {% endfor %}
+        
+        </table>
+        <p>File Already Exists : {{value}} </p>
+        <!-- <input type="text" id="nn" value="{{value}}">File Already exists:</input> -->
+        <input type="submit" class="button1" value="Validate the Metadata" id="btnSubmit" style=" margin-top: 1rem; width: auto; text-align: right;"> 
+        </form>
+        <!-- <input  class="button" id="button" href="#" type= "submit" value="Ingest Data"></input>          -->
+       <div class="popup">
+        <div class="popup-content">
+          <img src="{{ url_for('static', filename='close.jpg') }}" alt="close" class="close">
+          <p>The File Already exists in DataBase. Do you want to replace it or Append it ?</p>
+          <br><br>
+          <a href="{{ url_for('index2') }}" class="button"><input id="append" class="button" type="submit" value="Upsert"></input></a>
+          <a href="{{ url_for('index2') }}" class="button"><input class="button" type="submit" value="Overwrite"></input></a>
+        </div>
+
+      </div>
+
+      <script>
+        document.getElementById("button").addEventListener("click",function(){
+          var file_e= '{{value}}'
+
+          if (file_e=='NO'){
+            location.href = "{{ url_for('index2') }}" ;
+            document.querySelector(".popup").style.display ="none";
+          }
+          if (file_e=='YES'){
+            document.querySelector(".popup").style.display ="flex";
+          }
+          else{
+            document.querySelector(".popup").style.display ="flex";
+            document.getElementById("append").style.display='none';
+
+          }
+         })
+         document.querySelector(".close").addEventListener("click",function(){
+          document.querySelector(".popup").style.display ="none";
+         })
+       </script>
+
+
+</body>
