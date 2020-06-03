@@ -10,6 +10,13 @@ import csv
 import codecs
 from itertools import islice
 from dateutil.parser import parse
+import time  #depends on the mthod used for hive metadata if not useful remove it
+import pyodbc
+import os
+import urllib
+import warnings
+import re
+
 
 
 
@@ -103,6 +110,8 @@ def overviewform():
         Target_Adlaccount = details['Target_Adlaccount']
         source_query = details['source query']
         google_drive_link=details['Public Sharable Link']
+        session['onedrive link']=details['Public Downloadable Link']
+        session['Delimiter of onedrive']=details['Delimiter of onedrive']
         session['delimiter']=details['Type of Delimiter']
         if session['source location type']=='Google Drive':
             session['file_id'] = google_drive_link.split('/')[-2]
@@ -120,7 +129,7 @@ def overviewform():
         cursor.close()
         mydb = mysql.connector.connect(host="demetadata.mysql.database.azure.com",user="DEadmin@demetadata",passwd="Tredence@123",database = "deaccelator")
         cursor = mydb.cursor()
-        cursor.execute(" SELECT EntryID FROM datacatlogentry   ORDER BY EntryID DESC LIMIT 1 ;")
+        cursor.execute(" SELECT EntryID FROM datacatlogentry  WHERE UserName=%s AND `Owner`=%s ORDER BY EntryID DESC LIMIT 1 ;",(UserName,Owner))
         data=cursor.fetchone()
         df = pd.DataFrame(data)
         session['EntryID']=int(df.iat[0,0])
@@ -128,21 +137,58 @@ def overviewform():
             cursor.execute(" INSERT INTO parameter (EntryId, Source_Type, Source_Parameter_1, Source_Parameter_2, Source_Parameter_3, Source_Parameter_4, Target_Type, Target_Parameter_1, target_AParameter_2, Target_Parameter_3, Target_Parameter_4) VALUES(%s,%s, %s,%s,%s, %s,%s, %s,%s,%s, %s) ;",(session['EntryID'],session['source location type'],session['hostname'],session['user'],session['password'],session['database name' ],TargetType,Target_Applicationid,target_ApplicationCredential,Target_Directoryid,Target_Adlaccount))
         elif session['source location type'] == 'Google Drive':
             cursor.execute(" INSERT INTO parameter (EntryId, Source_Type, Source_Parameter_1, Source_Parameter_2, Target_Type, Target_Parameter_1, target_AParameter_2, Target_Parameter_3, Target_Parameter_4) VALUES(%s,%s,%s, %s,%s, %s,%s,%s, %s) ;",(session['EntryID'],session['source location type'],session['file_id'],session['delimiter'],TargetType,Target_Applicationid,target_ApplicationCredential,Target_Directoryid,Target_Adlaccount))
+        elif session['source location type'] == 'One Drive':
+            cursor.execute(" INSERT INTO parameter (EntryId, Source_Type, Source_Parameter_1, Source_Parameter_2, Target_Type, Target_Parameter_1, target_AParameter_2, Target_Parameter_3, Target_Parameter_4) VALUES(%s,%s,%s, %s,%s, %s,%s,%s, %s) ;",(session['EntryID'],session['source location type'],session['onedrive link'],session['Delimiter of onedrive'],TargetType,Target_Applicationid,target_ApplicationCredential,Target_Directoryid,Target_Adlaccount))
+        elif session['source location type'] == 'Hive':
+            cursor.execute(" INSERT INTO parameter (EntryId, Source_Type, Target_Type, Target_Parameter_1, target_AParameter_2, Target_Parameter_3, Target_Parameter_4) VALUES(%s,%s,%s, %s,%s,%s, %s) ;",(session['EntryID'],session['source location type'],TargetType,Target_Applicationid,target_ApplicationCredential,Target_Directoryid,Target_Adlaccount))
         mydb.commit()
         cursor.close()
-        return redirect(url_for('index'))
+        if session['source location type'] == 'Hive':
+            return redirect(url_for('hive_metadata_1'))
+        else:
+            return redirect(url_for('index'))
     return render_template('overview.html')
 
-@app.route('/pythonlogin/metadata') # is not useful for now
-def metadata():
-    # Check if user is loggedin
-    if 'loggedin' in session:
-        # User is loggedin show them the home page
-        return render_template('metadataV2.html', username=session['username'])
-    # User is not loggedin redirect to login page
-    return redirect(url_for('login'))
+@app.route("/hive_metadata_1", methods=['GET', 'POST'])    #series for hive metadata capture
+def hive_metadata_1():
+    SERVER_NAME="testsrc.azurehdinsight.net"   #https://testsrc.azurehdinsight.net/
+    DATABASE_NAME="default"
+    USERID="admin"  #admin
+    PASSWORD="Tredence@123"  #Tredence@123
+    DB_DRIVER="Microsoft Hive ODBC Driver"  
+    driver = 'DRIVER={' + DB_DRIVER + '}'
+    server = 'Host=' + SERVER_NAME + ';Port=443;UseNativeQuery=1'
+    database = 'Schema=' + DATABASE_NAME
+    hiveserv = 'HiveServerType=2'
+    auth = 'AuthMech=6'
+    uid = 'UID=' + USERID
+    pwd = 'PWD=' + PASSWORD
+    CONNECTION_STRING = ';'.join([driver,server,database,hiveserv,auth,uid,pwd])
+    #print(CONNECTION_STRING)
+    connection = pyodbc.connect(CONNECTION_STRING, autocommit=True)
+    cursor=connection.cursor()
+    queryString34 = """ desc testdb.actor  ; """
+    a = pd.read_sql(queryString34,connection)
+    df = pd.DataFrame()
+    df['ColumnName']=a['col_name']
+    df['DataType']=a['data_type']
+    df3 = df.assign(ColumnNumber=[i+1 for i in range(len(df))])[['ColumnNumber'] + df.columns.tolist()]
+    df3['Nullable']=''
+    df3['Default']=''
+    df3['Description']=''
+    value = session['file exists']
+    return render_template("metadataV3.html", column_names=df3.columns.values, row_data=list(df3.values.tolist()), zip=zip, value=value)
 
-def conv2(s):
+# @app.route('/pythonlogin/metadata') # is not useful for now
+# def metadata():
+#     # Check if user is loggedin
+#     if 'loggedin' in session:
+#         # User is loggedin show them the home page
+#         return render_template('metadataV2.html', username=session['username'])
+#     # User is not loggedin redirect to login page
+#     return redirect(url_for('login'))
+
+def conv2(s):      # used for determing datatypes of flat file
     try:
         val = int(s)
         return val
@@ -157,9 +203,15 @@ def conv2(s):
                 pass    
     return s
 
+def get_confirm_token(response):
+            for key, value in response.cookies.items():
+                if key.startswith('download_warning'):
+                    return value
+            return None
+
 
 @app.route('/metadata', methods=['GET', 'POST'])
-def index():
+def index():                                     # for flat file and mysql metadata
     SourceType = session['source location type']
     if SourceType == 'MySql':
         mydb = mysql.connector.connect(host=session['hostname'],user=session['user'],passwd=session['password'],database = session['database name'])
@@ -178,11 +230,6 @@ def index():
         return render_template("metadataV3.html", column_names=df1.columns.values, row_data=list(df1.values.tolist()), zip=zip, value=value)
     elif SourceType == 'Google Drive':
         URL = 'https://docs.google.com/uc?export=download'
-        def get_confirm_token(response):
-            for key, value in response.cookies.items():
-                if key.startswith('download_warning'):
-                    return value
-            return None
         session1 = requests.Session()
         file_id = session['file_id']
         response = session1.get(URL, params = { 'id' : file_id }, stream = True)
@@ -213,6 +260,38 @@ def index():
         df3['Description']=''
         value = session['file exists']
         return render_template("metadataV3.html", column_names=df3.columns.values, row_data=list(df3.values.tolist()), zip=zip, value=value)
+    elif SourceType == 'One Drive':           #session['onedrive link'],session['Delimiter of onedrive'],
+        session1 = requests.Session()
+        dwn_url = session['onedrive link']
+        response = session1.get(dwn_url, stream = True)
+        token = get_confirm_token(response)
+        if token:
+            params = { 'confirm' : token }
+            response = session1.get(dwn_url, params = params, stream = True)
+        a = session['Delimiter of onedrive']
+        with closing(response) as r:
+            reader = csv.reader(codecs.iterdecode(r.iter_lines(), 'utf-8'), delimiter=a , quotechar='"',quoting=csv.QUOTE_MINIMAL )
+            lst = []
+            a=[]
+            for row in islice(reader,0,10):
+                for cell in row:
+                    y=conv2(cell)
+                    a.append(y)
+                lst.append(a)
+                a=[]
+        df = pd.DataFrame(lst[1:],columns=lst[0])
+        df2=pd.DataFrame(df.dtypes,index=None,columns='data_type'.split())
+        df3 = pd.DataFrame(df.columns,columns='ColumnName'.split())
+        df4=df2.replace(['int64','float64','datetime64[ns]','object'],['int','float','datetime','string'])
+        df4.index = df3.index
+        df3['DataType']=df4['data_type']
+        df3 = df3.assign(ColumnNumber=[i+1 for i in range(len(df3))])[['ColumnNumber'] + df3.columns.tolist()]
+        df3['Nullable']=''
+        df3['Default']=''
+        df3['Description']=''
+        value = session['file exists']
+        return render_template("metadataV3.html", column_names=df3.columns.values, row_data=list(df3.values.tolist()), zip=zip, value=value)
+
 
 @app.route('/Rollbackmetadata', methods=['GET', 'POST'])
 def Rollbackmetadata():
@@ -221,7 +300,10 @@ def Rollbackmetadata():
     cursor.execute("DELETE FROM metadata WHERE EntryID = %s ;"%(session['EntryID']))
     mydb.commit()
     cursor.close()
-    return redirect(url_for('index'))    
+    if session['source location type'] == 'Hive':
+        return redirect(url_for('hive_metadata_1'))
+    else:
+        return redirect(url_for('index'))    
 
 
 @app.route('/ingest', methods=['GET', 'POST'])
@@ -240,6 +322,8 @@ def index1():
         cursor = mydb.cursor()
         df4 = pd.DataFrame(list(zip(ColumnNumber,ColumnName,DataType,Nullable,PrimaryKey,Default,Column_description)), columns =['ColumnNumber','ColumnName','DataType','Nullable','PrimaryKey','Default','Description'])
         df1 = df4.assign(EntryID=session['EntryID'])[['EntryID'] + df4.columns.tolist()]
+        session['json_metadata']=str(df1.to_json)
+        print(session['json_metadata'])
         cols = "`,`".join([str(i) for i in df1.columns.tolist()])
         for i,row in df1.iterrows():
             sql = "INSERT INTO `metadata` (`" +cols + "`) VALUES (" + "%s,"*(len(row)-1) + "%s)"
@@ -277,7 +361,10 @@ def index2():
     headers = {'Authorization': 'Bearer dapi042eca35a8dd2f707b2562849e33f013'}
     data = '{ "job_id" : 3 , "notebook_params": { "entryid": ' +str(session['EntryID'])+ ' } }'
     response = requests.post('https://adb-6971132450799346.6.azuredatabricks.net/api/2.0/jobs/run-now', headers=headers, data=data)
+    print(response)
+    print(session['json_metadata'])
     return redirect(url_for('home')) 
+
 
 @app.route('/pythonlogin/metadata5', methods=['GET', 'POST'])
 def append():
@@ -289,6 +376,7 @@ def append():
     headers = {'Authorization': 'Bearer dapi042eca35a8dd2f707b2562849e33f013'}
     data = '{ "job_id" : 3 , "notebook_params": { "entryid": ' +str(session['EntryID'])+ ' } }'
     response = requests.post('https://adb-6971132450799346.6.azuredatabricks.net/api/2.0/jobs/run-now', headers=headers, data=data)
+    print(response)
     return redirect(url_for('home')) 
 
 @app.route('/pythonlogin/metadata6', methods=['GET', 'POST'])
@@ -301,6 +389,7 @@ def replace():
     headers = {'Authorization': 'Bearer dapi042eca35a8dd2f707b2562849e33f013'}
     data = '{ "job_id" : 3 , "notebook_params": { "entryid": ' +str(session['EntryID'])+ ' } }'
     response = requests.post('https://adb-6971132450799346.6.azuredatabricks.net/api/2.0/jobs/run-now', headers=headers, data=data)
+    print(response)
     return redirect(url_for('home')) 
 
 
