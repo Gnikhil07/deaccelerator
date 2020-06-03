@@ -183,13 +183,25 @@ td, th {
          font: 0.8em sans-serif;
          
          /* Uniform text field size */
-         width: 50px;
+         width: 100px;
          background-color:rgb(236, 222, 202) ;
          
          /* Match form field borders */
          border: 1px solid #999;
 
 }
+#DQCheck{
+         font: 0.8em sans-serif;
+         
+         /* Uniform text field size */
+         width: 100px;
+         background-color:rgb(236, 222, 202) ;
+         
+         /* Match form field borders */
+         border: 1px solid #999;
+
+}
+
 tr:nth-child(even) {
   background-color: #dddddd;
 
@@ -284,6 +296,7 @@ tr:nth-child(even) {
                 
                 {% endfor %}
                 <th>PrimaryKey</th>
+                <th>DQ Check</th>
                 <!--th>Column_description</th-->
             </tr>
             {% for row in row_data %}
@@ -295,6 +308,10 @@ tr:nth-child(even) {
                 {% endif %}
                 {% endfor %}
                 <td><select class="form-control" name = "PrimaryKey" id = "PrimaryKey">
+                  <option>Yes</option>
+                  <option selected>No</option>
+                </select></td>
+                <td><select class="form-control" name = "DQCheck" id = "DQCheck">
                   <option>Yes</option>
                   <option selected>No</option>
                 </select></td>

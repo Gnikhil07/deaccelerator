@@ -40,7 +40,7 @@
           document.getElementById("div4").style.display="none";
          
        }
-       if (source=="Azure"){
+       if (source=="One Drive"){
          document.getElementById("div1").style.display="none";
           document.getElementById("div2").style.display="none";
           document.getElementById("div3").style.display="none";
@@ -219,7 +219,8 @@ function closeNav() {
      <li>
      <label for="source"><B>Source Location type:</B></label>
      <select id="source" name="source location type" onchange="onLocationSelected()">
-     <option id="pc"   value="Google Drive">Flat File</option>
+     <option id="googledrive"   value="Google Drive">Google Drive Flat File</option>
+     <option id="onedrive"   value="One Drive">One Drive Flat File</option>
      <option  id="sql"   value="MySql">MySql</option>
      <option  id="hive"   value="Hive">Hive</option>
      <!-- <option  id="azure"   value="Azure">AzureCloud</option> -->
@@ -275,14 +276,18 @@ function closeNav() {
     </li>
     <li>
       <div id="div4">
-         <ul>
-           <li>
-          <label for="Azure Location">Azure Location:</label>
-       <input type="text" id="Azure Location" >
-    </li>
-  </ul>
+        <ul>
+          <li>
+       <label for="Sharable Link">Public Downloadable Link:</label>
+       <input type="text" id="Sharable Link"    name="Public Downloadable Link"  >
+      </li>
+      <li>
+       <label for="Delimiter">Type of Delimiter:</label>
+       <input type="text" id="Delimiter"    name="Delimiter of onedrive"  >
+      </li>
+      </ul>
       </div>
-    </li>
+   </li>
      <li>
      <label for="Dataset Catergory"><B>Dataset Catergory:</B></label>
      <input type="text" id="Dataset Catergory" name="Dataset Catergory" required >
