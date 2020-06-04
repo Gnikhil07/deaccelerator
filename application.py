@@ -155,7 +155,7 @@ def hive_metadata_1():
     DATABASE_NAME="default"
     USERID="admin"  #admin
     PASSWORD="Tredence@123"  #Tredence@123
-    DB_DRIVER="Microsoft Hive ODBC Driver"  
+    DB_DRIVER="ODBC Driver 17 for SQL Server"  
     driver = 'DRIVER={' + DB_DRIVER + '}'
     server = 'Host=' + SERVER_NAME + ';Port=443;UseNativeQuery=1'
     database = 'Schema=' + DATABASE_NAME
